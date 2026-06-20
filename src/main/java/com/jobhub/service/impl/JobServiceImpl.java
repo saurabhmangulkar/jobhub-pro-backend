@@ -1,6 +1,10 @@
 package com.jobhub.service.impl;
 
+
+
 import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 
 import org.springframework.stereotype.Service;
 
@@ -16,7 +20,19 @@ public class JobServiceImpl implements JobService {
     public JobServiceImpl(JobRepository jobRepository) {
         this.jobRepository = jobRepository;
     }
+    @Override
+    public Page<Job> getJobs(int page, int size) {
 
+        return jobRepository.findAll(
+                PageRequest.of(page, size));
+    }
+    @Override
+    public List<Job> searchJobs(String keyword) {
+
+        return jobRepository
+                .findByTitleContainingIgnoreCase(
+                        keyword);
+    }
     @Override
     public Job createJob(Job job) {
         return jobRepository.save(job);
@@ -56,4 +72,5 @@ public class JobServiceImpl implements JobService {
     public void deleteJob(Long id) {
         jobRepository.deleteById(id);
     }
+    
 }

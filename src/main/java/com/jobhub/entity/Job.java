@@ -18,7 +18,19 @@ public class Job {
     @Column(nullable = false, length = 2000)
     private String description;
 
-    @Column(nullable = false)
+    @ManyToOne
+    @JoinColumn(name = "company_id")
+    private Company company;
+    
+    public Company getCompany() {
+		return company;
+	}
+
+	public void setCompany(Company company) {
+		this.company = company;
+	}
+
+	@Column(nullable = false)
     private String location;
 
     private Double salary;

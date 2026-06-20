@@ -2,12 +2,12 @@ package com.jobhub.security;
 
 import java.io.IOException;
 
-import org.springframework.stereotype.Component;
-import org.springframework.web.filter.OncePerRequestFilter;
-import java.util.Collections;
-
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,47 +16,58 @@ import jakarta.servlet.http.HttpServletResponse;
 @Component
 public class JwtFilter extends OncePerRequestFilter {
 
-	private final JwtUtil jwtUtil;
+    private final JwtUtil jwtUtil;
+    private final CustomUserDetailsService userDetailsService;
 
-	public JwtFilter(JwtUtil jwtUtil) {
-	    this.jwtUtil = jwtUtil;
-	}
-	@Override
-	protected void doFilterInternal(
-	        HttpServletRequest request,
-	        HttpServletResponse response,
-	        FilterChain filterChain)
-	        throws ServletException, IOException {
+    public JwtFilter(
+            JwtUtil jwtUtil,
+            CustomUserDetailsService userDetailsService) {
 
-	    String authHeader =
-	            request.getHeader("Authorization");
+        this.jwtUtil = jwtUtil;
+        this.userDetailsService = userDetailsService;
+    }
 
-	    if (authHeader != null &&
-	            authHeader.startsWith("Bearer ")) {
+    @Override
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain)
+            throws ServletException, IOException {
 
-	        String token =
-	                authHeader.substring(7);
-	        if (jwtUtil.isTokenValid(token)) {
+        String authHeader =
+                request.getHeader("Authorization");
 
-	            String email =
-	                    jwtUtil.extractEmail(token);
+        if (authHeader != null &&
+                authHeader.startsWith("Bearer ")) {
 
-	            UsernamePasswordAuthenticationToken authentication =
-	                    new UsernamePasswordAuthenticationToken(
-	                            email,
-	                            null,
-	                            Collections.emptyList());
+            String token =
+                    authHeader.substring(7);
 
-	            SecurityContextHolder
-	                    .getContext()
-	                    .setAuthentication(authentication);
+            if (jwtUtil.isTokenValid(token)) {
 
-	            System.out.println(
-	                    "Authenticated User = "
-	                            + email);
-	        }
-	    }
+                String email =
+                        jwtUtil.extractEmail(token);
 
-	    filterChain.doFilter(request, response);
-	}
+                UserDetails userDetails =
+                        userDetailsService
+                                .loadUserByUsername(email);
+
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(
+                                userDetails,
+                                null,
+                                userDetails.getAuthorities());
+
+                SecurityContextHolder
+                        .getContext()
+                        .setAuthentication(authentication);
+
+                System.out.println(
+                        "Authenticated User = "
+                                + email);
+            }
+        }
+
+        filterChain.doFilter(request, response);
+    }
 }

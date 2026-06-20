@@ -1,5 +1,5 @@
 package com.jobhub.entity;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 @Entity
@@ -18,16 +18,17 @@ public class User {
 
     @Column(nullable = false, unique = true)
     private String email;
-
+    @JsonIgnore
     @Column(nullable = false)
     private String password;
 
     @Column(length = 15)
     private String phone;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "role_id", nullable = false)
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "role_id")
     private Role role;
+ 
 
     // No-Args Constructor (Required by JPA)
     public User() {
